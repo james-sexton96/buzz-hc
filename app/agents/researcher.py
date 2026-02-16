@@ -1,9 +1,9 @@
 """Market Access Agent: FDA/EMA, clinical trials, payer/reimbursement."""
 
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, ModelRetry, RunContext
 
 from app.context import ResearchContext
-from app.llm import get_model
+from app.llm import get_model, get_retries
 from app.schema import ClinicalTrialSummary, MarketAccessFindings
 from app.tools import deep_scrape, search_clinical_trials, tavily_search
 
@@ -13,6 +13,7 @@ researcher_agent = Agent(
     model,
     deps_type=ResearchContext,
     output_type=MarketAccessFindings,
+    retries=get_retries(),
     instructions=(
         "You are a Market Access specialist. Research FDA/EMA regulatory status, "
         "clinical trial status (use search_clinical_trials), and payer/reimbursement landscape. "
@@ -21,6 +22,26 @@ researcher_agent = Agent(
         "reimbursement_notes, and a brief raw_evidence_summary."
     ),
 )
+
+
+@researcher_agent.output_validator
+async def validate_researcher_output(
+    ctx: RunContext[ResearchContext], output: MarketAccessFindings
+) -> MarketAccessFindings:
+    """Only reject if the output is completely empty — no data at all."""
+    has_anything = (
+        output.regulatory_snapshots
+        or output.clinical_trial_summaries
+        or output.reimbursement_notes
+        or output.raw_evidence_summary
+    )
+    if not has_anything:
+        raise ModelRetry(
+            "Your output is completely empty. Populate at least one of: "
+            "regulatory_snapshots, clinical_trial_summaries, reimbursement_notes, "
+            "or raw_evidence_summary with data from your research."
+        )
+    return output
 
 
 @researcher_agent.tool
@@ -54,7 +75,6 @@ async def tavily_search_tool(
     ctx: RunContext[ResearchContext],
     query: str,
     max_results: int = 5,
-    search_depth: str = "basic",
 ) -> str:
     """Broad web search. Use for regulatory, reimbursement, and market access topics."""
-    return await tavily_search(ctx, query, max_results=max_results, search_depth=search_depth)
+    return await tavily_search(ctx, query, max_results=max_results)
