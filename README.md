@@ -21,24 +21,20 @@ Built with **PydanticAI**, Buzz-HC utilizes specialized prompting tailored for t
 
 ## Setup
 
-1.  **Clone and install**
+1.  **Clone and run the setup script**
     ```bash
     cd buzz-hc
-    uv sync
-    # or: pip install -e .
+    bash setup-dev.sh
     ```
+    This installs Python dependencies, the Playwright Chromium browser (for Crawl4AI deep scraping), and creates a `.env` file from the template.
 
-2.  **Environment**
-    Copy `.env.example` to `.env` and configure your LLM provider and API keys:
+2.  **Configure your environment**
+    Edit `.env` with your LLM provider and API keys:
     - `LLM_PROVIDER=ollama` (default)
     - `LLM_MODEL=ministral-3`
     - `TAVILY_API_KEY=` (Required for search)
 
-3.  **Crawl4AI Setup (optional)**
-    For deep scraping of complex sites:
-    ```bash
-    crawl4ai-setup
-    ```
+    > **Note:** Playwright Chromium is optional. Without it, `deep_scrape` is unavailable but the agents will still work using Tavily search and ClinicalTrials.gov.
 
 ## Usage
 
@@ -64,8 +60,10 @@ uv run python main.py "Market access for CAR-T therapies in EU"
 ```
 buzz-hc/
 ├── main.py                 # CLI Entry point
+├── setup-dev.sh            # One-command dev environment setup
 ├── app/
 │   ├── ui.py               # Streamlit Monitoring UI
+│   ├── startup.py          # Pre-flight dependency checks
 │   ├── agents/             # The Swarm: Lead, Researcher, Analyst, Reporter
 │   ├── tools/              # ClinicalTrials.gov, Crawl4AI, Tavily
 │   ├── schema.py           # Pydantic V2 models for structured data

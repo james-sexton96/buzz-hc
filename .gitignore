@@ -13,4 +13,8 @@ wheels/
 
 # ai dev tools
 .claude
+CLAUDE.md
 .cursor
+
+# IDE files
+.idea/

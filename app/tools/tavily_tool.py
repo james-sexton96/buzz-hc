@@ -48,18 +48,27 @@ async def tavily_search(
             max_results=max_results,
             search_depth=search_depth,
         )
-        ctx.deps.add_event("tool_result", "Tavily", f"Found {len(getattr(response, 'results', []))} results")
+        # Tavily SDK returns a plain dict, not a dataclass/object.
+        results = _get(response, "results") or []
+        ctx.deps.add_event("tool_result", "Tavily", f"Found {len(results)} results")
     except Exception as e:
         logger.exception("Tavily search failed: %s", e)
         return f"Tavily search error: {e!s}"
 
-    if not getattr(response, "results", None):
+    if not results:
         return "No results from Tavily for this query."
 
     parts = []
-    for r in response.results[:max_results]:
-        title = getattr(r, "title", "") or ""
-        url = getattr(r, "url", "") or ""
-        content = getattr(r, "content", "") or ""
+    for r in results[:max_results]:
+        title = _get(r, "title") or ""
+        url = _get(r, "url") or ""
+        content = _get(r, "content") or ""
         parts.append(f"## {title}\nURL: {url}\n\n{content}")
     return "\n\n".join(parts)
+
+
+def _get(obj: object, key: str) -> object:
+    """Get a value from a dict or object attribute — handles both."""
+    if isinstance(obj, dict):
+        return obj.get(key)
+    return getattr(obj, key, None)

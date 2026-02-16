@@ -9,6 +9,15 @@ root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+from app.startup import check_dependencies
+check_dependencies()
+
 from pydantic_ai import UsageLimits
 
 from app.agents.lead import lead_agent
