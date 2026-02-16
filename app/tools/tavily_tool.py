@@ -40,6 +40,11 @@ async def tavily_search(
     if not api_key.strip():
         return "Tavily API key not set. Set TAVILY_API_KEY in environment and pass it via ResearchContext."
 
+    # LLMs love to hallucinate search_depth values like "deep" or "thorough"
+    valid_depths = {"basic", "advanced"}
+    if search_depth not in valid_depths:
+        search_depth = "basic"
+
     try:
         ctx.deps.add_event("tool_call", "Tavily", f"Searching: {query}")
         client = AsyncTavilyClient(api_key=api_key)

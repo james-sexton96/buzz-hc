@@ -6,7 +6,7 @@ from app.agents.analyst import analyst_agent
 from app.agents.reporter import reporter_agent
 from app.agents.researcher import researcher_agent
 from app.context import ResearchContext
-from app.llm import get_model
+from app.llm import get_model, get_retries
 from app.schema import AnalystFindings, MarketAccessFindings, MarketReport
 
 model = get_model()
@@ -16,6 +16,7 @@ lead_agent = Agent(
     model,
     deps_type=ResearchContext,
     output_type=MarketReport,
+    retries=get_retries(),
     instructions=(
         "You are the Lead Researcher. You receive a pharma market research query. "
         "Plan the research: (1) Use run_market_access_research to get regulatory, clinical trial, "
