@@ -14,6 +14,9 @@ try:
 except ImportError:
     pass
 
+from app.startup import check_dependencies
+check_dependencies()
+
 from pydantic_ai import UsageLimits
 
 from app.agents.lead import lead_agent
