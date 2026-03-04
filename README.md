@@ -31,7 +31,7 @@ Built with **PydanticAI**, Buzz-HC utilizes specialized prompting tailored for t
 2.  **Configure your environment**
     Edit `.env` with your LLM provider and API keys:
     - `LLM_PROVIDER=ollama` (default)
-    - `LLM_MODEL=ministral-3`
+    - `LLM_MODEL=qwen3.5:latest`
     - `TAVILY_API_KEY=` (Required for search)
 
     > **Note:** Playwright Chromium is optional. Without it, `deep_scrape` is unavailable but the agents will still work using Tavily search and ClinicalTrials.gov.

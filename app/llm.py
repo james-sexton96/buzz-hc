@@ -43,14 +43,14 @@ def get_model() -> Any:
 
     Environment variables:
         LLM_PROVIDER: One of 'ollama' (default), 'openai'. Future: 'anthropic', 'google'.
-        LLM_MODEL: Model name (e.g. ministral-3, glm4.7-flash for Ollama).
+        LLM_MODEL: Model name (e.g. qwen3.5:latest, glm4.7-flash for Ollama).
         OLLAMA_BASE_URL: Ollama API base URL (default http://localhost:11434/v1).
         OPENAI_API_KEY: Required when LLM_PROVIDER=openai.
         ANTHROPIC_API_KEY: Required when LLM_PROVIDER=anthropic (not yet implemented).
         GOOGLE_API_KEY: Required when LLM_PROVIDER=google (not yet implemented).
     """
     provider = (os.environ.get("LLM_PROVIDER") or "ollama").strip().lower()
-    model_name = os.environ.get("LLM_MODEL") or "ministral-3"
+    model_name = os.environ.get("LLM_MODEL") or "qwen3.5:latest"
 
     if provider == "ollama":
         base_url = os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434/v1"

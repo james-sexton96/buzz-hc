@@ -95,7 +95,8 @@ if st.button("🚀 Run Research", type="primary"):
                         result = await lead_agent.run(
                             query,
                             deps=deps,
-                            usage_limits=UsageLimits(request_limit=30, tool_calls_limit=20),
+                            # usage_limits=UsageLimits(request_limit=30, tool_calls_limit=50),
+                            usage_limits=UsageLimits(request_limit=50),
                         )
                         
                         log_task.cancel()
