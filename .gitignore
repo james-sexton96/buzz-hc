@@ -18,3 +18,6 @@ CLAUDE.md
 
 # IDE files
 .idea/
+
+# Saved research sessions and PDF exports
+reports/
