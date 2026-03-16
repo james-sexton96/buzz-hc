@@ -60,9 +60,9 @@ async def deep_scrape_tool(
     query: str | None = None,
 ) -> str:
     """Scrape a URL and return content as Markdown. Use for pharma/regulatory portals."""
-    ctx.deps.add_event("tool_call", "Crawl4AI", f"Scraping: {url}")
+    await ctx.deps.add_event("tool_call", "Crawl4AI", f"Scraping: {url}")
     res = await deep_scrape(url, query)
-    ctx.deps.add_event("tool_result", "Crawl4AI", f"Scraped {len(res)} characters")
+    await ctx.deps.add_event("tool_result", "Crawl4AI", f"Scraped {len(res)} characters")
     return res
 
 
@@ -73,9 +73,9 @@ async def search_clinical_trials_tool(
     max_studies: int = 50,
 ) -> list[ClinicalTrialSummary]:
     """Search ClinicalTrials.gov. search_expr can be condition, drug name, or NCT id."""
-    ctx.deps.add_event("tool_call", "ClinicalTrials", f"Searching trials for: {search_expr}")
+    await ctx.deps.add_event("tool_call", "ClinicalTrials", f"Searching trials for: {search_expr}")
     res = await search_clinical_trials(search_expr, max_studies=max_studies)
-    ctx.deps.add_event("tool_result", "ClinicalTrials", f"Found {len(res)} trials")
+    await ctx.deps.add_event("tool_result", "ClinicalTrials", f"Found {len(res)} trials")
     return res
 
 
