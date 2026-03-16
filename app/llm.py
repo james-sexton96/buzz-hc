@@ -8,7 +8,9 @@ from openai.types import chat
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.ollama import OllamaProvider
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class OllamaChatModel(OpenAIChatModel):
     """Workarounds for Ollama's OpenAI-compatible API quirks.
