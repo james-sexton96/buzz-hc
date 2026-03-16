@@ -46,7 +46,7 @@ async def tavily_search(
         search_depth = "basic"
 
     try:
-        await ctx.deps.add_event("tool_call", "Tavily", f"Searching: {query}")
+        ctx.deps.add_event("tool_call", "Tavily", f"Searching: {query}")
         client = AsyncTavilyClient(api_key=api_key)
         response = await client.search(
             query=query,
@@ -55,7 +55,7 @@ async def tavily_search(
         )
         # Tavily SDK returns a plain dict, not a dataclass/object.
         results = _get(response, "results") or []
-        await ctx.deps.add_event("tool_result", "Tavily", f"Found {len(results)} results")
+        ctx.deps.add_event("tool_result", "Tavily", f"Found {len(results)} results")
     except Exception as e:
         logger.exception("Tavily search failed: %s", e)
         return f"Tavily search error: {e!s}"

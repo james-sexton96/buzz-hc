@@ -50,7 +50,7 @@ async def run_market_access_research(
     query: str,
 ) -> Union[MarketAccessFindings, LimitedMarketAccessFindings]:
     """Delegate to the Market Access agent."""
-    await ctx.deps.add_event("agent_start", "Researcher", f"Starting research for: {query}")
+    ctx.deps.add_event("agent_start", "Researcher", f"Starting research for: {query}")
     
     try:
         # FIX: We pass a "fresh" usage object to prevent the child from 
@@ -68,12 +68,12 @@ async def run_market_access_research(
         ctx.usage.request_tokens += result.usage().request_tokens
         ctx.usage.response_tokens += result.usage().response_tokens
         
-        await ctx.deps.add_event("agent_end", "Researcher", "Completed research")
+        ctx.deps.add_event("agent_end", "Researcher", "Completed research")
         ctx.deps.research_findings = result.output
         return result.output
 
     except (UsageLimitExceeded, Exception) as e:
-        await ctx.deps.add_event("agent_limit", "Researcher", f"Limit reached: {str(e)}")
+        ctx.deps.add_event("agent_limit", "Researcher", f"Limit reached: {str(e)}")
         return LimitedMarketAccessFindings(
             warning=f"Market Access research hit a limit: {str(e)}"
         )
@@ -84,7 +84,7 @@ async def run_analyst_research(
     query: str,
 ) -> Union[AnalystFindings, LimitedAnalystFindings]:
     """Delegate to the Data Analyst agent."""
-    await ctx.deps.add_event("agent_start", "Analyst", f"Starting analyst research")
+    ctx.deps.add_event("agent_start", "Analyst", f"Starting analyst research")
     
     try:
         result = await analyst_agent.run(
@@ -100,7 +100,7 @@ async def run_analyst_research(
         ctx.deps.analyst_findings = result.output
         return result.output
     except (UsageLimitExceeded, Exception) as e:
-        await ctx.deps.add_event("agent_limit", "Analyst", f"Limit reached: {str(e)}")
+        ctx.deps.add_event("agent_limit", "Analyst", f"Limit reached: {str(e)}")
         return LimitedAnalystFindings(warning=f"Analyst hit a limit: {str(e)}")
 
 @lead_agent.tool
@@ -109,7 +109,7 @@ async def run_reporter(
     synthesis_prompt: str,
 ) -> MarketReport:
     """Delegate to the Reporter agent. Pass a detailed prompt that includes findings so it can synthesize the final report."""
-    await ctx.deps.add_event("agent_start", "Reporter", "Starting report synthesis")
+    ctx.deps.add_event("agent_start", "Reporter", "Starting report synthesis")
     
     # The reporter usually has very strict limits as it's just summarizing
     result = await reporter_agent.run(
@@ -118,5 +118,5 @@ async def run_reporter(
         usage=ctx.usage,
         usage_limits=UsageLimits(request_limit=8, tool_calls_limit=0),
     )
-    await ctx.deps.add_event("agent_end", "Reporter", "Completed report synthesis")
+    ctx.deps.add_event("agent_end", "Reporter", "Completed report synthesis")
     return result.output

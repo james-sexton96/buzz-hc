@@ -68,7 +68,7 @@ async def deep_scrape_tool(
     query: str | None = None,
 ) -> str:
     """Scrape a URL and return content as Markdown. Use for market report pages."""
-    await ctx.deps.add_event("tool_call", "Crawl4AI", f"Scraping: {url}")
+    ctx.deps.add_event("tool_call", "Crawl4AI", f"Scraping: {url}")
     res = await deep_scrape(url, query)
-    await ctx.deps.add_event("tool_result", "Crawl4AI", f"Scraped {len(res)} characters")
+    ctx.deps.add_event("tool_result", "Crawl4AI", f"Scraped {len(res)} characters")
     return res

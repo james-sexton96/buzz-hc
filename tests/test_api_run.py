@@ -13,10 +13,10 @@ async def _fake_pipeline(session_id, query, ctx):
     """Simulate a fast pipeline completion without hitting an LLM."""
     from app.schema import MarketReport
 
-    await ctx.add_event("agent_start", "Researcher", f"Starting research for: {query}")
-    await ctx.add_event("agent_end", "Researcher", "Done")
-    await ctx.add_event("agent_start", "Reporter", "Writing report")
-    await ctx.add_event("agent_end", "Reporter", "Complete")
+    ctx.add_event("agent_start", "Researcher", f"Starting research for: {query}")
+    ctx.add_event("agent_end", "Researcher", "Done")
+    ctx.add_event("agent_start", "Reporter", "Writing report")
+    ctx.add_event("agent_end", "Reporter", "Complete")
 
     report = MarketReport(
         title="Test Report",
