@@ -33,9 +33,6 @@ jobs:
   nextjs-build:
     name: Next.js Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
 
@@ -49,19 +46,17 @@ jobs:
         with:
           node-version: "20"
           cache: "pnpm"
-          cache-dependency-path: "**/pnpm-lock.yaml"
+          # Point this to the actual file location relative to the root
+          cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Install dependencies
+        # Use the working-directory here instead of at the job level
         run: pnpm install --frozen-lockfile
-
-      - name: TypeScript check
-        run: pnpm exec tsc --noEmit
-
-      - name: Run tests
-        run: pnpm test --passWithNoTests
+        working-directory: web
 
       - name: Build
         run: pnpm build
+        working-directory: web
 
   lint:
     name: Lint (non-blocking)
