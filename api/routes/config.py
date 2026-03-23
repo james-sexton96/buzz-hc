@@ -8,6 +8,9 @@ from typing import Any
 from fastapi import APIRouter
 
 from app.scenarios import SCENARIOS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter()
 
