@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added a Bloomberg-style report dossier screen (`/report/[id]`) that displays structured market access findings with headline KPIs, panel grid, and source citations from completed research sessions (#15)
+- Added interactive citation drawer — clicking inline footnote markers slides in a framer-motion panel listing the full source references, dismissible with ESC or a click outside
+- Added `DonutChart` and `SparkLine` SVG components for visualizing Payer Coverage and trend data within the report screen
 - New live run observation page (`/run/<id>`) with a 3-column layout: per-agent status cards on the left, an animated swarm topology diagram in the centre, and a live event log on the right.
 - Pipeline progress strip below the header showing the 5 pipeline stages (Research → Analysis → Reporting, etc.) and their current status at a glance.
 - Per-agent cards that display running/idle/error state and an indeterminate progress bar while an agent is active.

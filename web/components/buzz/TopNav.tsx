@@ -62,6 +62,7 @@ function Ticker() {
 
 function resolveActive(pathname: string): string {
   if (pathname === "/sessions") return "sessions";
+  if (pathname.startsWith("/report")) return "sessions";
   if (pathname.startsWith("/query") || pathname.startsWith("/run")) return "research";
   return "research";
 }

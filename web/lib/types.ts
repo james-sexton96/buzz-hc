@@ -87,3 +87,27 @@ export interface RunState {
   report: MarketReport | null;
   error: string | null;
 }
+
+// Partial mirrors of Python `MarketAccessFindings` / `AnalystFindings` — only
+// the fields the dossier UI renders. `research_json` / `analyst_json` arrive
+// as raw JSON strings on `SessionDetail`; consumers JSON.parse with try/catch.
+export interface PayerCoverageEntry {
+  payer: string;
+  coverage_status: string;
+  formulary_tier?: string;
+}
+
+export interface CompetitorEntry {
+  name: string;
+  share_or_notes: string;
+}
+
+export interface MarketAccessFindings {
+  payer_coverage: PayerCoverageEntry[];
+  [key: string]: unknown;
+}
+
+export interface AnalystFindings {
+  competitive_landscape: CompetitorEntry[];
+  [key: string]: unknown;
+}
