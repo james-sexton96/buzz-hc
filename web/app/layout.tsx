@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono, Lora } from "next/font/google";
-import Link from "next/link";
+import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const mono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-});
-
-const lora = Lora({
-  variable: "--font-serif",
-  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -29,37 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${jakarta.variable} ${mono.variable} ${lora.variable} antialiased min-h-screen bg-background`}
+        className={`${ibmPlexSans.variable} ${jetbrainsMono.variable} antialiased min-h-screen`}
+        style={{ background: "var(--bg)", color: "var(--text-hi)" }}
       >
-        <nav className="border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto px-4 flex h-12 items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground text-[10px] font-bold">Bz</span>
-              </div>
-              <span className="font-semibold text-sm tracking-tight">Buzz HC</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/run"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Research
-              </Link>
-              <Link
-                href="/sessions"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                History
-              </Link>
-            </div>
-          </div>
-        </nav>
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

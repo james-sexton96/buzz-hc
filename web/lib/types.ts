@@ -36,7 +36,7 @@ export interface UsageStats {
   response_tokens: number;
 }
 
-export type SessionStatus = "running" | "complete" | "error";
+export type SessionStatus = "running" | "complete" | "error" | "queued" | "paused";
 
 export interface SessionSummary {
   session_id: string;
