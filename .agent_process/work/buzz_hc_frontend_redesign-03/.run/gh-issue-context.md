@@ -1,7 +1,7 @@
 ## GitHub Issue Context
 - Issue: #15
 - Repo: james-sexton96/buzz-hc
-- Current Status: status:planning
+- Current Status: status:approved
 - Scope: buzz_hc_frontend_redesign-03
 - Iteration: iteration_01
 - Suggested Branch: issue/15-buzz_hc_frontend_redesign-03
