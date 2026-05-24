@@ -120,13 +120,13 @@ async def run_market_access_research(
                 researcher_agent.run(
                     f"Research market access for: {query}",
                     deps=ctx.deps,
-                    usage_limits=UsageLimits(request_limit=10, tool_calls_limit=8),
+                    usage_limits=UsageLimits(request_limit=10, tool_calls_limit=12),
                 ),
                 timeout=_AGENT_TIMEOUT,
             )
 
-            ctx.usage.request_tokens += result.usage().request_tokens
-            ctx.usage.response_tokens += result.usage().response_tokens
+            ctx.usage.input_tokens += result.usage().input_tokens
+            ctx.usage.output_tokens += result.usage().output_tokens
 
             await ctx.deps.add_event("agent_end", "Researcher", "Completed research")
             ctx.deps.research_findings = result.output
@@ -192,13 +192,13 @@ async def run_analyst_research(
                 analyst_agent.run(
                     f"Analyze market for: {query}",
                     deps=ctx.deps,
-                    usage_limits=UsageLimits(request_limit=10, tool_calls_limit=8),
+                    usage_limits=UsageLimits(request_limit=10, tool_calls_limit=12),
                 ),
                 timeout=_AGENT_TIMEOUT,
             )
 
-            ctx.usage.request_tokens += result.usage().request_tokens
-            ctx.usage.response_tokens += result.usage().response_tokens
+            ctx.usage.input_tokens += result.usage().input_tokens
+            ctx.usage.output_tokens += result.usage().output_tokens
 
             ctx.deps.analyst_findings = result.output
             return result.output
