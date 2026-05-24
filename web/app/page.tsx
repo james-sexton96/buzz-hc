@@ -1,181 +1,236 @@
 "use client";
 
-import Link from "next/link";
-import { Search, BarChart2, FileText, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { TopNav } from "@/components/buzz/TopNav";
+import { SwarmGraph } from "@/components/buzz/SwarmGraph";
+import { StatusDot } from "@/components/buzz/StatusDot";
+import { SectionLabel } from "@/components/buzz/SectionLabel";
+import { StatusChip } from "@/components/buzz/StatusChip";
 
-function HeroPreview() {
-  return (
-    <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-5 h-full">
-      <div className="space-y-3">
-        <p className="font-[family-name:var(--font-serif)] text-sm font-semibold leading-snug">
-          GLP-1 Agonist Market Access Report 2030
-        </p>
-        <div className="border-l-2 border-primary/40 pl-2">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            The GLP-1 agonist market is projected to exceed $130B by 2030, driven by obesity and T2D approvals…
-          </p>
-        </div>
-        <div className="space-y-1.5 pt-1">
-          <div className="bg-muted rounded h-2 w-full" />
-          <div className="bg-muted rounded h-2 w-5/6" />
-          <div className="bg-muted rounded h-2 w-4/5" />
-          <div className="bg-muted rounded h-2 w-full" />
-        </div>
-        <p className="text-[10px] uppercase tracking-wider text-primary/60 mt-3">
-          Competitive Landscape
-        </p>
-        <div className="space-y-1.5">
-          <div className="bg-muted rounded h-2 w-full" />
-          <div className="bg-muted rounded h-2 w-3/4" />
-          <div className="bg-muted rounded h-2 w-5/6" />
-        </div>
-        <p className="text-[10px] text-muted-foreground/50 pt-1">
-          Sources: FDA, EMA, ClinicalTrials.gov, Bloomberg Health
-        </p>
-      </div>
-    </div>
-  );
-}
+const SUGGESTIONS = [
+  "Map market access for GLP-1 agonists in EU5 through 2030",
+  "Competitive landscape for CAR-T therapies vs. BiTE antibodies",
+  "NICE HTA outcomes for rare disease gene therapies 2022–2025",
+];
 
-const featureCards = [
-  {
-    icon: Search,
-    title: "Market Access Research",
-    description: "Regulatory snapshots, clinical trial summaries, and reimbursement landscape analysis.",
-    colSpan: "col-span-1",
-  },
-  {
-    icon: BarChart2,
-    title: "Data Analysis",
-    description: "Market sizing estimates and competitive landscape mapping from live sources.",
-    colSpan: "col-span-1",
-  },
-  {
-    icon: FileText,
-    title: "Publication-Ready Reports",
-    description: "Structured markdown reports with PDF export, styled for pharma stakeholders.",
-    colSpan: "col-span-1",
-  },
+const LIVE_LOG = [
+  { t: "12:42:01", agent: "lead",     c: "var(--amber)",  msg: "planning · 6 subtasks queued" },
+  { t: "12:42:04", agent: "market",   c: "var(--cyan)",   msg: "GET clinicaltrials.gov · 47 trials" },
+  { t: "12:42:09", agent: "analyst",  c: "var(--violet)", msg: "reading IQVIA · TAM frame ready" },
+  { t: "12:42:14", agent: "market",   c: "var(--cyan)",   msg: "FDA orange book · 12 NDAs" },
+  { t: "12:42:18", agent: "lead",     c: "var(--amber)",  msg: "handoff → reporter · 18,402 tok", pulse: true },
+];
+
+const FEATURES = [
+  { l: "01", t: "Regulatory snapshots",     d: "FDA, EMA, PMDA filings · IND status · orange book mapping." },
+  { l: "02", t: "Clinical trial synthesis", d: "ClinicalTrials.gov · arm-by-arm analysis · primary endpoints." },
+  { l: "03", t: "Market sizing",            d: "TAM/SAM · CAGR · payer mix · published-source triangulation." },
+  { l: "04", t: "Structured dossier",       d: "Pydantic-validated markdown · PDF export · footnoted citations." },
+];
+
+const STATS = [
+  { l: "Avg run", v: "4:18", s: "min:sec" },
+  { l: "Sources", v: "2.4M", s: "indexed" },
+  { l: "Therapies", v: "1,847", s: "tracked" },
+  { l: "Accuracy", v: "94.2%", s: "vs analyst" },
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const onSubmit = () => {
+    if (query.trim()) {
+      router.push("/query?q=" + encodeURIComponent(query));
+    } else {
+      router.push("/query");
+    }
+  };
+
   return (
-    <div className="space-y-20 py-12">
-      {/* Hero */}
-      <div className="text-center space-y-6 max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-primary/8 text-primary text-xs font-medium px-3 py-1 rounded-full border border-primary/20">
-          Multi-agent AI pipeline
+    <div style={{
+      background: "var(--bg)", color: "var(--text-hi)",
+      fontFamily: "var(--font-sans)",
+      display: "flex", flexDirection: "column", minHeight: "100vh",
+    }}>
+      <TopNav />
+
+      {/* Status strip */}
+      <div style={{
+        display: "flex", alignItems: "center",
+        padding: "0 16px", height: 28,
+        borderBottom: "1px solid var(--border)",
+        fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-lo)",
+        gap: 18, flexShrink: 0,
+      }}>
+        <span style={{ color: "var(--amber)" }}>● LIVE</span>
+        <span>BUZZ HC v1.4.2</span>
+        <span>4 AGENTS ONLINE</span>
+        <span>3 RUNS IN-FLIGHT</span>
+        <span style={{ marginLeft: "auto" }}>WED · 24 MAY · 12:42:18 UTC</span>
+      </div>
+
+      {/* Hero — 2 columns */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "minmax(0,1fr) 560px",
+        flex: 1, minHeight: 0,
+      }}>
+        {/* Left */}
+        <div style={{
+          padding: "56px 56px 40px",
+          display: "flex", flexDirection: "column",
+          justifyContent: "center",
+          borderRight: "1px solid var(--border)",
+          gap: 28,
+        }}>
+          <SectionLabel>Multi-agent pharma intelligence</SectionLabel>
+
+          <h1 style={{
+            fontSize: 64, lineHeight: 0.98, fontWeight: 600,
+            letterSpacing: "-0.025em", margin: 0,
+          }}>
+            Publication-grade<br />
+            market research,<br />
+            <span style={{ color: "var(--amber)" }}>fielded by a swarm.</span>
+          </h1>
+
+          <p style={{
+            fontSize: 15, lineHeight: 1.55, color: "var(--text-md)",
+            margin: 0, maxWidth: 460,
+          }}>
+            Four specialized agents — orchestrator, market access, analyst, reporter — work in parallel
+            against FDA, EMA, ClinicalTrials.gov, and live web sources to produce a structured pharma dossier in minutes.
+          </p>
+
+          {/* Query box */}
+          <div
+            style={{
+              display: "flex", alignItems: "center",
+              border: "1px solid var(--border)", borderRadius: 2,
+              background: "var(--surface)",
+            }}
+            onFocus={(e) => e.currentTarget.style.borderColor = "var(--amber)"}
+            onBlur={(e) => e.currentTarget.style.borderColor = "var(--border)"}
+          >
+            <span style={{ padding: "0 12px", color: "var(--amber)", fontFamily: "var(--font-mono)", fontSize: 13 }}>›</span>
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") onSubmit(); }}
+              placeholder="Ask the swarm anything pharma…"
+              style={{
+                flex: 1, padding: "14px 0",
+                background: "transparent", border: "none", outline: "none",
+                color: "var(--text-hi)", fontFamily: "var(--font-sans)", fontSize: 14,
+              }}
+            />
+            <button
+              onClick={onSubmit}
+              style={{
+                background: "var(--amber)", color: "#0a0d14",
+                border: "none", padding: "12px 18px",
+                fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 600,
+                letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              Run swarm ↵
+            </button>
+          </div>
+
+          {/* Suggestions */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: -12 }}>
+            {SUGGESTIONS.map(s => (
+              <button
+                key={s}
+                onClick={() => setQuery(s)}
+                style={{
+                  padding: "4px 9px", border: "1px solid var(--border)",
+                  background: "transparent", color: "var(--text-md)",
+                  fontFamily: "var(--font-mono)", fontSize: 10, cursor: "pointer",
+                  borderRadius: 2, letterSpacing: "0.04em",
+                }}
+              >
+                ↗ {s.length > 56 ? s.slice(0, 56) + "…" : s}
+              </button>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+            marginTop: 16,
+            borderTop: "1px solid var(--border)",
+            borderBottom: "1px solid var(--border)",
+          }}>
+            {STATS.map((s, i) => (
+              <div key={i} style={{ padding: "14px 16px", borderRight: i < 3 ? "1px solid var(--border)" : "none" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-lo)", letterSpacing: "0.16em", textTransform: "uppercase" }}>{s.l}</div>
+                <div style={{ fontSize: 22, fontWeight: 600, marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-lo)", marginTop: 2 }}>{s.s}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">
-          Pharma Market Intelligence,{" "}
-          <span className="text-primary">in minutes</span>
-        </h1>
-        <p className="text-muted-foreground text-base leading-relaxed max-w-lg mx-auto">
-          A three-agent AI pipeline — Researcher, Analyst, Reporter — that delivers
-          structured market access and competitive landscape reports from live data sources.
-        </p>
-        <div className="flex gap-3 justify-center pt-2">
-          <Link
-            href="/run"
-            className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-6 h-10 text-sm font-medium transition-colors hover:bg-primary/90"
-          >
-            Start Research
-          </Link>
-          <Link
-            href="/sessions"
-            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-6 h-10 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            View History
-          </Link>
+
+        {/* Right — swarm + log */}
+        <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)" }}>
+          <div style={{
+            padding: "12px 16px", borderBottom: "1px solid var(--border)",
+            display: "flex", alignItems: "center", gap: 12,
+          }}>
+            <SectionLabel>Swarm visualization</SectionLabel>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-lo)", marginLeft: "auto" }}>
+              DEMO
+            </span>
+            <StatusChip status="running" label="Live" />
+          </div>
+
+          <div style={{ padding: "20px 16px", display: "flex", justifyContent: "center" }}>
+            <SwarmGraph width={520} height={360} animate />
+          </div>
+
+          <div style={{
+            borderTop: "1px solid var(--border)",
+            padding: "12px 16px", flex: 1,
+            display: "flex", flexDirection: "column", gap: 10,
+            background: "var(--bg)",
+          }}>
+            <SectionLabel>Live stream</SectionLabel>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-md)", lineHeight: 1.7 }}>
+              {LIVE_LOG.map((l, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", opacity: 1 - i * 0.05 }}>
+                  <span style={{ color: "var(--text-lo)" }}>{l.t}</span>
+                  <span style={{ color: l.c, letterSpacing: "0.14em", fontSize: 10, fontWeight: 600, width: 70 }}>{l.agent.toUpperCase()}</span>
+                  <span style={{ color: l.pulse ? "var(--amber)" : "var(--text-md)", flex: 1 }}>{l.msg}</span>
+                  {l.pulse && <StatusDot status="live" pulse />}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bento grid */}
-      <div className="grid grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)]">
-        {/* HeroPreview — spans 2 cols, 2 rows */}
-        <motion.div
-          className="col-span-2 row-span-2"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0 }}
-          whileHover={{ scale: 1.015, y: -2 }}
-        >
-          <HeroPreview />
-        </motion.div>
-
-        {/* Feature 1 */}
-        <motion.div
-          className="col-span-1"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          whileHover={{ scale: 1.015, y: -2 }}
-        >
-          <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-5 h-full space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Search className="w-5 h-5" />
+      {/* Feature strip */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+        borderTop: "1px solid var(--border)", height: 132,
+      }}>
+        {FEATURES.map((f, i) => (
+          <div key={i} style={{
+            padding: "16px 20px",
+            borderRight: i < 3 ? "1px solid var(--border)" : "none",
+            display: "flex", flexDirection: "column", gap: 8,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--amber)", letterSpacing: "0.14em" }}>{f.l}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-lo)" }}>→</span>
             </div>
-            <h3 className="font-semibold text-sm">{featureCards[0].title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{featureCards[0].description}</p>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{f.t}</div>
+            <div style={{ fontSize: 12, color: "var(--text-md)", lineHeight: 1.5 }}>{f.d}</div>
           </div>
-        </motion.div>
-
-        {/* Feature 2 */}
-        <motion.div
-          className="col-span-1"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          whileHover={{ scale: 1.015, y: -2 }}
-        >
-          <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-5 h-full space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <BarChart2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm">{featureCards[1].title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{featureCards[1].description}</p>
-          </div>
-        </motion.div>
-
-        {/* Feature 3 */}
-        <motion.div
-          className="col-span-1"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          whileHover={{ scale: 1.015, y: -2 }}
-        >
-          <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-5 h-full space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <FileText className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm">{featureCards[2].title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{featureCards[2].description}</p>
-          </div>
-        </motion.div>
-
-        {/* CTA card */}
-        <motion.div
-          className="col-span-2"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.25 }}
-          whileHover={{ scale: 1.015, y: -2 }}
-        >
-          <Link href="/run" className="block h-full">
-            <div className="bg-gradient-to-br from-primary/8 to-primary/18 border border-primary/20 rounded-2xl shadow-sm p-5 h-full flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <p className="font-semibold text-sm">Ready to get started?</p>
-                <p className="text-sm text-muted-foreground">Run your first pharma research query in seconds.</p>
-              </div>
-              <div className="flex items-center gap-2 text-primary font-medium text-sm whitespace-nowrap">
-                Start Research
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-          </Link>
-        </motion.div>
+        ))}
       </div>
     </div>
   );
