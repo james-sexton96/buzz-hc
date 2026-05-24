@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.schema import MarketReport, WorkflowEvent
+from app.schema import AnalystFindings, MarketAccessFindings, MarketReport, WorkflowEvent
 
 # Default directory for saved sessions
 DEFAULT_HISTORY_DIR = Path("./reports")
@@ -33,6 +33,30 @@ class ResearchSession(BaseModel):
         default_factory=list, description="Workflow trace events"
     )
     usage: UsageStats = Field(default_factory=UsageStats)
+
+
+class CheckpointSession(BaseModel):
+    """A partial research session saved mid-run so it can be resumed later."""
+
+    session_id: str = Field(description="Unique session identifier (same as the failed run)")
+    timestamp: datetime = Field(default_factory=datetime.now)
+    query: str = Field(description="The original research query")
+    research_findings: MarketAccessFindings | None = Field(
+        default=None, description="Researcher agent output (if completed before failure)"
+    )
+    analyst_findings: AnalystFindings | None = Field(
+        default=None, description="Analyst agent output (if completed before failure)"
+    )
+    events: list[WorkflowEvent] = Field(
+        default_factory=list, description="Workflow events captured before failure"
+    )
+    stage_reached: str = Field(
+        default="none",
+        description="Furthest stage completed: 'none' | 'research' | 'analyst'",
+    )
+    failure_reason: str | None = Field(
+        default=None, description="Exception message or 'KeyboardInterrupt'"
+    )
 
 
 def _ensure_dir(directory: Path) -> Path:
@@ -63,6 +87,35 @@ def load_session(filepath: Path) -> ResearchSession:
     """Load a research session from a JSON file."""
     data = filepath.read_text()
     return ResearchSession.model_validate_json(data)
+
+
+DEFAULT_CHECKPOINT_DIR = Path("./reports/checkpoints")
+
+
+def save_checkpoint(
+    checkpoint: CheckpointSession,
+    directory: Path = DEFAULT_CHECKPOINT_DIR,
+) -> Path:
+    """Save a mid-run checkpoint to JSON. Returns the file path."""
+    _ensure_dir(directory)
+    filepath = directory / f"{checkpoint.session_id}.checkpoint.json"
+    filepath.write_text(checkpoint.model_dump_json(indent=2))
+    return filepath
+
+
+def load_checkpoint(
+    session_id_or_path: str,
+    directory: Path = DEFAULT_CHECKPOINT_DIR,
+) -> "CheckpointSession":
+    """Load a checkpoint by session ID or absolute/relative file path."""
+    p = Path(session_id_or_path)
+    filepath = p if p.exists() else directory / f"{session_id_or_path}.checkpoint.json"
+    if not filepath.exists():
+        raise FileNotFoundError(
+            f"No checkpoint found at {filepath}. "
+            f"Checkpoints are stored in {directory}/"
+        )
+    return CheckpointSession.model_validate_json(filepath.read_text())
 
 
 def list_sessions(directory: Path = DEFAULT_HISTORY_DIR) -> list[dict[str, Any]]:

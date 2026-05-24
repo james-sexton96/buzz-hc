@@ -15,6 +15,7 @@ wheels/
 .claude
 CLAUDE.md
 .cursor
+.agent_process
 
 # IDE files
 .idea/

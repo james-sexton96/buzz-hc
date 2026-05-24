@@ -22,7 +22,7 @@ class ResearchContext:
     events: list[WorkflowEvent] = field(default_factory=list)
     """List of events captured during the research run."""
 
-    def add_event(
+    async def add_event(
         self,
         event_type: str,
         source: str,
