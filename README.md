@@ -128,7 +128,7 @@ buzz-hc/
 │   │   ├── sessions/       # Session history browser
 │   │   └── report/         # Final report viewer
 │   ├── components/         # Shared UI components
-│   ├── hooks/              # useRunSession (SSE state machine)
+│   ├── hooks/              # useRunSession (start-only), useLiveSession (refresh-safe SSE)
 │   └── lib/
 │       ├── api.ts          # Typed fetch wrappers
 │       └── types.ts        # TypeScript types mirroring Python schema

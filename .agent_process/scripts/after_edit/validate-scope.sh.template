@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Scope-specific validation template
+# Copy this to validate-<scope-name>.sh and customize
+
+SCOPE=${1:-unknown}
+ITERATION=${2:-unknown}
+
+printf "[%s-validation] scope=%s iteration=%s\n" "$SCOPE" "$SCOPE" "$ITERATION"
+
+# FILES IN SCOPE (customize these)
+FILES_TO_LINT=(
+  "path/to/file1.tsx"
+  "path/to/file2.ts"
+)
+
+# TEST PATTERNS FOR SCOPE (customize these)
+TEST_PATTERNS=(
+  "TestSuite1"
+  "TestSuite2"
+)
+
+pushd frontend >/dev/null
+
+printf "[%s-validation] Linting scope-specific sources...\n" "$SCOPE"
+npx eslint "${FILES_TO_LINT[@]}" --max-warnings 0
+
+printf "[%s-validation] Running scope-specific tests...\n" "$SCOPE"
+npm test -- --testPathPattern="$(IFS=\|; echo "${TEST_PATTERNS[*]}")" \
+  --watchAll=false --passWithNoTests
+
+popd >/dev/null
+
+printf "[%s-validation] Complete.\n" "$SCOPE"

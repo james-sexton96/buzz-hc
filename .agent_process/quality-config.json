@@ -1,0 +1,59 @@
+{
+  "_comment": "Quality gate configuration for the AI Agent Process. See process/quality-configuration.md for schema reference.",
+  "_version": "1.0",
+  "pre_flight": {
+    "enabled": true,
+    "session_recovery": true,
+    "working_tree_check": true,
+    "branch_check": true,
+    "git_context": true
+  },
+  "knowledge_base": {
+    "enabled": true,
+    "query_during_planning": true,
+    "deposit_on_approve": true,
+    "deposit_on_block_pivot": true
+  },
+  "adversarial_review": {
+    "enabled": true,
+    "skip_for_trivial": true,
+    "trivial_threshold_files": 2,
+    "trivial_threshold_criteria": 1
+  },
+  "work_unit_decomposition": {
+    "enabled": true,
+    "trigger_threshold_files": 3,
+    "trigger_threshold_layers": 2,
+    "max_work_units": 6
+  },
+  "design_review": {
+    "enabled": true,
+    "trigger": "complexity:complex",
+    "max_revision_cycles": 2,
+    "min_reviewers": 2,
+    "max_reviewers": 4
+  },
+  "github_issues": {
+    "enabled": true,
+    "_user_configured": true,
+    "repo": "james-sexton96/buzz-hc"
+  },
+  "pr_shepherd": {
+    "enabled": true
+  },
+  "metaswarm": {
+    "enabled": true,
+    "features": {
+      "brainstorm": true,
+      "design_review": true,
+      "prime": true,
+      "pr_shepherd": true,
+      "self_reflect": true
+    },
+    "_user_configured": true
+  },
+  "priority_labels": {
+    "enabled": true,
+    "default": "y"
+  }
+}

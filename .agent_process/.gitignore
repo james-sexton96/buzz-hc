@@ -1,0 +1,9 @@
+# Ephemeral sub-agent working data — recreated every run
+**/.run/
+
+# Session state — changes every ap_exec run
+work/current_iteration.conf
+work/current_work_unit.conf
+
+# Per-user personality adaptation — personal data, not framework config
+orchestration/context/personality/user-profile.md

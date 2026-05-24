@@ -1,0 +1,6 @@
+# Project-specific template overrides go here.
+#
+# To customize the GitHub issue body template, copy:
+#   templates/github-issue-body.md → templates/overrides/github-issue-body.md
+#
+# The script checks this directory first before falling back to the defaults.

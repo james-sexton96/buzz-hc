@@ -1,0 +1,46 @@
+{
+  "include_patterns": ["**/*.md"],
+  "exclude_patterns": [
+    "**/bugs/**",
+    "**/_TEMPLATE_*",
+    "**/artifacts/**"
+  ],
+  "priority_mapping": {
+    "_comment": "Canonical values: CRITICAL, HIGH, MEDIUM, LOW. Legacy mappings normalize variants.",
+    "CRITICAL": "CRITICAL",
+    "HIGH": "HIGH",
+    "MEDIUM": "MEDIUM",
+    "LOW": "LOW",
+    "P0": "CRITICAL",
+    "P1": "HIGH",
+    "P2": "MEDIUM",
+    "High": "HIGH",
+    "Medium": "MEDIUM",
+    "Low": "LOW",
+    "high": "HIGH",
+    "medium": "MEDIUM",
+    "low": "LOW"
+  },
+  "categories": {
+    "auto_detect": true,
+    "prefix_mappings": {
+      "_comment": "Map requirement ID prefixes to categories. Only needed if auto_detect fails."
+    }
+  },
+  "status_markers": {
+    "_comment": "STANDARDIZED markers. All new results.md files MUST use these exact formats.",
+    "approved": ["**Status:** APPROVED", "**Status:** ✅ APPROVED"],
+    "complete": ["**Status:** COMPLETE", "**Status:** ✅ COMPLETE"],
+    "blocked": ["**Status:** BLOCKED"],
+    "in_progress": ["**Status:** IN_PROGRESS"],
+    "failed": ["**Status:** FAILED"]
+  },
+  "project_mappings": {
+    "work_to_requirement": {
+      "_comment": "Only needed if requirements lack frontmatter IDs. Maps work dir names to requirement IDs."
+    }
+  },
+  "status_overrides": {
+    "_comment": "Runtime overrides from /ap_project set-status command."
+  }
+}
