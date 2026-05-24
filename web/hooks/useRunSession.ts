@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { getSession, getStreamUrl, startRun } from "@/lib/api";
-import type { MarketReport, RunState, WorkflowEvent } from "@/lib/types";
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { startRun } from "@/lib/api";
+import type { RunState } from "@/lib/types";
 
 const INITIAL_STATE: RunState = {
   phase: "idle",
@@ -14,11 +15,9 @@ const INITIAL_STATE: RunState = {
 
 export function useRunSession() {
   const [state, setState] = useState<RunState>(INITIAL_STATE);
-  const esRef = useRef<EventSource | null>(null);
+  const router = useRouter();
 
   const reset = useCallback(() => {
-    esRef.current?.close();
-    esRef.current = null;
     setState(INITIAL_STATE);
   }, []);
 
@@ -40,66 +39,10 @@ export function useRunSession() {
         return;
       }
 
+      router.push("/run/" + sessionId);
       setState((s) => ({ ...s, phase: "running", sessionId }));
-
-      const es = new EventSource(getStreamUrl(sessionId));
-      esRef.current = es;
-
-      es.addEventListener("workflow_event", (e: MessageEvent) => {
-        try {
-          const event: WorkflowEvent = JSON.parse(e.data);
-          setState((s) => ({ ...s, events: [...s.events, event] }));
-        } catch {
-          // ignore malformed events
-        }
-      });
-
-      es.addEventListener("done", async (e: MessageEvent) => {
-        es.close();
-        esRef.current = null;
-        try {
-          const terminal: { session_id: string; status: string } = JSON.parse(
-            e.data
-          );
-          if (terminal.status === "complete") {
-            const detail = await getSession(terminal.session_id);
-            setState((s) => ({
-              ...s,
-              phase: "complete",
-              report: detail.report ?? null,
-            }));
-          } else {
-            setState((s) => ({
-              ...s,
-              phase: "error",
-              error: "Pipeline finished with errors. Check session detail.",
-            }));
-          }
-        } catch (err) {
-          setState((s) => ({
-            ...s,
-            phase: "error",
-            error: err instanceof Error ? err.message : String(err),
-          }));
-        }
-      });
-
-      es.onerror = () => {
-        es.close();
-        esRef.current = null;
-        setState((s) => {
-          if (s.phase === "running") {
-            return {
-              ...s,
-              phase: "error",
-              error: "Connection to server lost.",
-            };
-          }
-          return s;
-        });
-      };
     },
-    [reset]
+    [reset, router]
   );
 
   return { state, run, reset };
