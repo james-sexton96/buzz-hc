@@ -30,7 +30,7 @@ class StreamingResearchContext(ResearchContext):
         message: str,
         details=None,
     ) -> None:
-        super().add_event(event_type, source, message, details)
+        await super().add_event(event_type, source, message, details)
         # Push the newly appended event into the SSE queue
         self._queue.put_nowait(self.events[-1])
         # Persist events to DB if we have a session_id

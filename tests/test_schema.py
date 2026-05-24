@@ -63,3 +63,12 @@ def test_market_access_findings_roundtrip():
     )
     restored = MarketAccessFindings.model_validate_json(findings.model_dump_json())
     assert restored.reimbursement_notes == "Medicare covers"
+
+
+def test_workflow_event_agent_limit():
+    """agent_limit must be a valid event_type — lead.py emits it on usage-limit paths."""
+    event = WorkflowEvent(event_type="agent_limit", source="Researcher", message="Limit reached")
+    assert event.event_type == "agent_limit"
+    dumped = event.model_dump_json()
+    restored = WorkflowEvent.model_validate_json(dumped)
+    assert restored.event_type == "agent_limit"

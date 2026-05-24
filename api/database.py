@@ -32,6 +32,7 @@ async def init_db() -> None:
         for col_def in [
             "ALTER TABLE sessions ADD COLUMN research_json TEXT",
             "ALTER TABLE sessions ADD COLUMN analyst_json TEXT",
+            "ALTER TABLE sessions ADD COLUMN failed_stage TEXT",
         ]:
             try:
                 await db.execute(col_def)

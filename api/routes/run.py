@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from pydantic_ai import UsageLimits
 
 from api.database import init_db
+from app.cli_resume import _SYNTHESIS_PROMPT
 from api.db_sessions import (
     get_session,
     insert_session,
@@ -73,7 +74,7 @@ async def _run_pipeline(
         )
     except Exception as exc:
         events_json = json.dumps([e.model_dump(mode="json") for e in ctx.events])
-        await mark_error(session_id, str(exc), events_json)
+        await mark_error(session_id, str(exc), events_json, failed_stage="pipeline")
     finally:
         # Persist any intermediate findings that were captured
         if ctx.research_findings is not None:
@@ -97,11 +98,12 @@ async def _run_reporter_only(
         research = ctx.research_findings
         analyst = ctx.analyst_findings
 
-        synthesis_prompt = (
-            f"Research query: {query}\n\n"
-            f"Market Access Findings:\n{research.model_dump_json(indent=2) if research else 'Not available'}\n\n"
-            f"Analyst Findings:\n{analyst.model_dump_json(indent=2) if analyst else 'Not available'}\n\n"
-            "Please synthesize the above findings into a comprehensive market report."
+        synthesis_prompt = _SYNTHESIS_PROMPT.format(
+            query=query,
+            question_archetype="multi-dimensional",
+            primary_dimensions="market access, payer coverage, market sizing, competitive landscape",
+            research=research.model_dump_json(indent=2) if research else "Not available",
+            analyst=analyst.model_dump_json(indent=2) if analyst else "Not available",
         )
 
         # Build a minimal RunContext-like object to call run_reporter tool directly
@@ -132,7 +134,7 @@ async def _run_reporter_only(
         )
     except Exception as exc:
         events_json = json.dumps([e.model_dump(mode="json") for e in ctx.events])
-        await mark_error(session_id, str(exc), events_json)
+        await mark_error(session_id, str(exc), events_json, failed_stage="reporter_retry")
     finally:
         if ctx.research_findings is not None:
             await save_research_checkpoint(session_id, ctx.research_findings.model_dump_json())

@@ -54,17 +54,22 @@ async def mark_complete(
         await db.close()
 
 
-async def mark_error(session_id: str, error_msg: str, events_json: str) -> None:
+async def mark_error(
+    session_id: str,
+    error_msg: str,
+    events_json: str,
+    failed_stage: str | None = None,
+) -> None:
     """Update session to status='error'."""
     db = await get_db()
     try:
         await db.execute(
             """
             UPDATE sessions
-            SET status='error', error_msg=?, events_json=?
+            SET status='error', error_msg=?, events_json=?, failed_stage=?
             WHERE session_id=?
             """,
-            (error_msg, events_json, session_id),
+            (error_msg, events_json, failed_stage, session_id),
         )
         await db.commit()
     finally:

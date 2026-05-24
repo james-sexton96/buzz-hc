@@ -15,9 +15,14 @@ wheels/
 .claude
 CLAUDE.md
 .cursor
+.agent_process
 
 # IDE files
 .idea/
 
 # Saved research sessions and PDF exports
 reports/
+
+# SQLite database
+data/
+*.db
