@@ -18,9 +18,11 @@ from app.schema import AnalystFindings, MarketAccessFindings, MarketReport
 
 model = get_model()
 
-# Timeout (seconds) for each sub-agent call — configurable via AGENT_TIMEOUT env var.
-# Ollama on M1 can take 90-180s; default 120s bounds worst-case hangs.
+# Timeout (seconds) for research/analyst sub-agent calls — configurable via AGENT_TIMEOUT env var.
 _AGENT_TIMEOUT = float(os.environ.get("AGENT_TIMEOUT", "120"))
+
+# Reporter gets more time — pure synthesis with no tool calls, generation can be longer.
+_REPORTER_TIMEOUT = float(os.environ.get("REPORTER_TIMEOUT", "600"))
 
 # Number of additional retry attempts on UnexpectedModelBehavior per stage.
 # Default 2 means: initial attempt + up to 2 retries = 3 total attempts.
@@ -246,7 +248,7 @@ async def run_reporter(
                 usage=ctx.usage,
                 usage_limits=UsageLimits(request_limit=8, tool_calls_limit=0),
             ),
-            timeout=_AGENT_TIMEOUT,
+            timeout=_REPORTER_TIMEOUT,
         )
         await ctx.deps.add_event("agent_end", "Reporter", "Completed report synthesis")
         return result.output
