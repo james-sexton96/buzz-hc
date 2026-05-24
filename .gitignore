@@ -22,3 +22,7 @@ CLAUDE.md
 
 # Saved research sessions and PDF exports
 reports/
+
+# SQLite database
+data/
+*.db
