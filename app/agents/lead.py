@@ -237,8 +237,48 @@ async def run_reporter(
     ctx: RunContext[ResearchContext],
     synthesis_prompt: str,
 ) -> MarketReport:
-    """Delegate to the Reporter agent. Pass a detailed prompt that includes findings so it can synthesize the final report."""
+    """Delegate to the Reporter agent. Pass a detailed prompt that includes findings so it can synthesize the final report.
+
+    Part 4: If the deps is a `StreamingResearchContext`, stream the draft
+    narrative text first (via `stream_reporter_text`) to populate the SSE
+    token queue, then run the structured `reporter_agent` to produce the
+    canonical `MarketReport`. The streaming call is best-effort: failures
+    are logged but do NOT abort the run — the structured call still fires.
+    """
     await ctx.deps.add_event("agent_start", "Reporter", "Starting report synthesis")
+
+    # Best-effort streaming draft pass (Part 4). Only fires when the deps is a
+    # StreamingResearchContext (production route path); ignored for plain
+    # ResearchContext (CLI / unit tests that do not need SSE token frames).
+    from api.stream import StreamingResearchContext as _SRC
+    from app.agents.reporter import stream_reporter_text
+
+    if isinstance(ctx.deps, _SRC):
+        try:
+            await asyncio.wait_for(
+                stream_reporter_text(synthesis_prompt, ctx.deps),
+                timeout=_REPORTER_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            await ctx.deps.add_event(
+                "info", "Reporter", f"Streaming draft timed out after {_REPORTER_TIMEOUT}s"
+            )
+        except UnexpectedModelBehavior as e:
+            await ctx.deps.add_event(
+                "info", "Reporter", f"Streaming draft model behavior issue: {e}"
+            )
+        except UsageLimitExceeded as e:
+            await ctx.deps.add_event(
+                "info", "Reporter", f"Streaming draft usage limit: {e}"
+            )
+        except Exception as e:  # noqa: BLE001 — best-effort streaming, see docstring
+            await ctx.deps.add_event(
+                "info", "Reporter", f"Streaming draft failed (non-fatal): {e}"
+            )
+        finally:
+            # Ensure token-stream sentinel is set even if stream_reporter_text
+            # itself failed to reach its own finally block.
+            ctx.deps.close_token_stream()
 
     try:
         result = await asyncio.wait_for(

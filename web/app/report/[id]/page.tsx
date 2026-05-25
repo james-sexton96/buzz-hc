@@ -9,7 +9,9 @@ import remarkGfm from "remark-gfm"
 import { getSession } from "@/lib/api"
 import type {
   AnalystFindings,
+  CountryMixEntry,
   MarketAccessFindings,
+  ScenarioEntry,
   SessionDetail,
 } from "@/lib/types"
 
@@ -68,6 +70,207 @@ function safeHostname(url: string): string {
   } catch {
     return url
   }
+}
+
+// ---------- Part 4 helper panels ----------
+
+function impactColor(impact: string | null | undefined): string {
+  const v = (impact ?? "").toLowerCase()
+  if (v.includes("positive") || v.startsWith("+")) return "var(--green)"
+  if (v.includes("negative") || v.startsWith("-")) return "var(--red)"
+  if (v.includes("neutral")) return "var(--amber)"
+  return "var(--text-md)"
+}
+
+function CountryMixPanel({ entries }: { entries: CountryMixEntry[] | null | undefined }) {
+  if (!entries || entries.length === 0) return null
+  return (
+    <div style={{ gridColumn: "span 1" }}>
+      <PanelCard heading="Country Mix · 2024 → 2030">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {entries.map((e, i) => {
+            const s24 = Math.max(0, Math.min(100, e.share_2024 ?? 0))
+            const s30 = Math.max(0, Math.min(100, e.share_2030 ?? 0))
+            const delta = (e.share_2030 ?? 0) - (e.share_2024 ?? 0)
+            const deltaColor =
+              delta > 0 ? "var(--green)" : delta < 0 ? "var(--red)" : "var(--text-md)"
+            return (
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: "var(--text-hi)", fontWeight: 500 }}>
+                    {e.country}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      color: deltaColor,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta.toFixed(1)}pp
+                  </span>
+                </div>
+                {/* Mini stacked-bar share24 → share30 */}
+                <div
+                  style={{
+                    display: "flex",
+                    height: 6,
+                    background: "var(--border)",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${s24}%`,
+                      height: "100%",
+                      background: "var(--cyan)",
+                      opacity: 0.55,
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: `${Math.max(0, s30 - s24)}%`,
+                      height: "100%",
+                      background: "var(--cyan)",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 9,
+                    color: "var(--text-lo)",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  <span>
+                    2024 · {(e.share_2024 ?? 0).toFixed(1)}%
+                    {e.spend_2024 ? ` · ${e.spend_2024}` : ""}
+                  </span>
+                  <span>
+                    2030 · {(e.share_2030 ?? 0).toFixed(1)}%
+                    {e.spend_2030 ? ` · ${e.spend_2030}` : ""}
+                  </span>
+                </div>
+                {e.notes && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--text-md)",
+                      lineHeight: 1.4,
+                      marginTop: 2,
+                    }}
+                  >
+                    {e.notes}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </PanelCard>
+    </div>
+  )
+}
+
+function ScenarioPanel({ entries }: { entries: ScenarioEntry[] | null | undefined }) {
+  if (!entries || entries.length === 0) return null
+  return (
+    <div style={{ gridColumn: "span 1" }}>
+      <PanelCard heading="Scenarios & Risk">
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontFamily: "var(--font-sans)",
+            fontSize: 12,
+            color: "var(--text-md)",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                borderBottom: "1px solid var(--border)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 9,
+                letterSpacing: "0.14em",
+                color: "var(--text-lo)",
+                textTransform: "uppercase",
+              }}
+            >
+              <th style={{ textAlign: "left", padding: "6px 4px" }}>Scenario</th>
+              <th style={{ textAlign: "right", padding: "6px 4px" }}>Prob</th>
+              <th style={{ textAlign: "left", padding: "6px 4px" }}>Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((e, i) => {
+              const pct = e.probability_pct ?? null
+              return (
+                <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                  <td style={{ padding: "8px 4px", color: "var(--text-hi)" }}>
+                    <div style={{ fontWeight: 500 }}>{e.scenario}</div>
+                    {e.description && (
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-md)",
+                          marginTop: 2,
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {e.description}
+                      </div>
+                    )}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 4px",
+                      textAlign: "right",
+                      fontFamily: "var(--font-mono)",
+                      fontVariantNumeric: "tabular-nums",
+                      color:
+                        pct === null
+                          ? "var(--text-lo)"
+                          : pct >= 50
+                            ? "var(--green)"
+                            : pct >= 20
+                              ? "var(--amber)"
+                              : "var(--red)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {pct === null ? "—" : `${pct.toFixed(0)}%`}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px 4px",
+                      color: impactColor(e.impact),
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 11,
+                    }}
+                  >
+                    {e.impact ?? "—"}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </PanelCard>
+    </div>
+  )
 }
 
 // ---------- page component ----------
@@ -529,6 +732,12 @@ export default function ReportPage() {
             )}
           </PanelCard>
         </div>
+
+        {/* Part 4: Country Mix panel — only when populated */}
+        <CountryMixPanel entries={report.country_mix ?? null} />
+
+        {/* Part 4: Scenario / Risk panel — only when populated */}
+        <ScenarioPanel entries={report.scenario_probabilities ?? null} />
       </div>
 
       {/* Footnotes strip */}

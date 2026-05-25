@@ -1,7 +1,0 @@
-2026-05-24T13:46:11Z SCOPE_START scope=agent_pipeline_tdd_error_handling action=start
-2026-05-24T13:46:15Z COMMENT scope=agent_pipeline_tdd_error_handling message=sync-body:issue=10
-2026-05-24T13:46:15Z COMMENT scope=agent_pipeline_tdd_error_handling message=status-change:status:planning
-2026-05-24T14:46:05Z COMMENT scope=agent_pipeline_tdd_error_handling message=status-change:status:awaiting_review
-2026-05-24T15:04:05Z COMMENT scope=agent_pipeline_tdd_error_handling message=status-change:status:reviewing
-2026-05-24T15:12:56Z SCOPE_CLOSE scope=agent_pipeline_tdd_error_handling decision=approved
-2026-05-24T15:13:11Z SCOPE_CLOSE scope=agent_pipeline_tdd_error_handling decision=approved

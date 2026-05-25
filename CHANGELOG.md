@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Real-time "Emerging draft" panel on the Run screen streams the reporter's analysis word-by-word as it writes, with a blinking cursor, so you can read the report before it finishes.
+- Report dossier now includes Country Mix and Scenario Probability panels when the analysis produces those fields, giving a richer at-a-glance breakdown of market exposure and risk scenarios.
 - Added a Bloomberg-style report dossier screen (`/report/[id]`) that displays structured market access findings with headline KPIs, panel grid, and source citations from completed research sessions (#15)
 - Added interactive citation drawer — clicking inline footnote markers slides in a framer-motion panel listing the full source references, dismissible with ESC or a click outside
 - Added `DonutChart` and `SparkLine` SVG components for visualizing Payer Coverage and trend data within the report screen

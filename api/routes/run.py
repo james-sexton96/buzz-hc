@@ -24,6 +24,7 @@ from api.db_sessions import (
 )
 from api.stream import StreamingResearchContext
 from app.history import UsageStats, generate_session_id
+from app.schema import WorkflowEvent
 
 router = APIRouter()
 
@@ -108,14 +109,42 @@ async def _run_reporter_only(
 
         # Build a minimal RunContext-like object to call run_reporter tool directly
         # Instead, use reporter_agent directly
-        from app.agents.reporter import reporter_agent
+        from app.agents.reporter import reporter_agent, stream_reporter_text
         from pydantic_ai import UsageLimits
+        from pydantic_ai.exceptions import UnexpectedModelBehavior, UsageLimitExceeded
+
+        # Part 4: stream the draft narrative first (best-effort), then run the
+        # structured `reporter_agent`. The four-branch discrimination is
+        # preserved on the structured call; the streaming call is best-effort
+        # and never aborts the run.
+        await ctx.add_event("agent_start", "Reporter", "Starting report synthesis (retry)")
+        try:
+            await stream_reporter_text(synthesis_prompt, ctx)
+        except asyncio.TimeoutError:
+            await ctx.add_event(
+                "info", "Reporter", "Streaming draft timed out (retry path)"
+            )
+        except UnexpectedModelBehavior as _e:
+            await ctx.add_event(
+                "info", "Reporter", f"Streaming draft model behavior issue (retry): {_e}"
+            )
+        except UsageLimitExceeded as _e:
+            await ctx.add_event(
+                "info", "Reporter", f"Streaming draft usage limit (retry): {_e}"
+            )
+        except Exception as _e:  # noqa: BLE001 — best-effort streaming
+            await ctx.add_event(
+                "info", "Reporter", f"Streaming draft failed non-fatally (retry): {_e}"
+            )
+        finally:
+            ctx.close_token_stream()
 
         result = await reporter_agent.run(
             synthesis_prompt,
             deps=ctx,
             usage_limits=UsageLimits(request_limit=8, tool_calls_limit=0),
         )
+        await ctx.add_event("agent_end", "Reporter", "Completed report synthesis (retry)")
         report = result.output
         usage_data = result.usage()
 
@@ -174,10 +203,26 @@ async def _sse_generator(
     session_id: str,
     ctx: StreamingResearchContext,
 ) -> AsyncGenerator[str, None]:
-    """Yield SSE-formatted strings from the context's event queue."""
-    async for event in ctx.event_generator():
-        data = event.model_dump_json()
-        yield f"event: workflow_event\ndata: {data}\n\n"
+    """Yield SSE-formatted strings from the context's combined queue.
+
+    Dispatches by item type:
+      - `WorkflowEvent` → `event: workflow_event` frame (existing behavior).
+      - `str` (reporter token chunk) → `event: reporter_token` frame with
+        payload `{"chunk": <str>, "token_index": <int>}`.
+
+    The `token_index` counter is local to this generator (NOT on the context)
+    so it never leaks across coroutines — each new SSE consumer starts at 0.
+    """
+    token_index = 0
+    async for item in ctx.event_generator():
+        if isinstance(item, str):
+            payload = json.dumps({"chunk": item, "token_index": token_index})
+            yield f"event: reporter_token\ndata: {payload}\n\n"
+            token_index += 1
+        elif isinstance(item, WorkflowEvent):
+            data = item.model_dump_json()
+            yield f"event: workflow_event\ndata: {data}\n\n"
+        # Unknown item types are silently ignored (defensive — should not happen).
 
     # Determine final status from DB
     session = await get_session(session_id)
