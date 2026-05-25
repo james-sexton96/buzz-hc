@@ -72,7 +72,7 @@
 | 📋 | HIGH | [Bloomberg UI — Part 1: Foundation + Static Screens](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-01.md) | 0 | Start here. No deps. |
 | 📋 | HIGH | [Bloomberg UI — Part 2: Run Screen + Persistence](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-02.md) | 0 | Depends on -01 |
 | 📋 | HIGH | [Bloomberg UI — Part 3: Report Dossier + KPI Panels](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-03.md) | 0 | Depends on -01, parallel with -02 |
-| 📋 | HIGH | [Bloomberg UI — Part 4: Reporter Token Streaming](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-04.md) | 0 | Depends on -02. Prototype pydantic-ai streaming first. |
+| 🛠 | HIGH | [Bloomberg UI — Part 4: Reporter Token Streaming](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-04.md) | 1 (scoped — iteration_01 pending) | Depends on -02. Streaming approach locked: hybrid `output_type=str` stream + structured one-shot. |
 
 *Breakdown file: [buzz_hc_frontend_redesign-breakdown.md](requirements_docs/ui_redesign/buzz_hc_frontend_redesign-breakdown.md)*
 

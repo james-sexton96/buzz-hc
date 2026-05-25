@@ -2,7 +2,7 @@
 id: buzz_hc_frontend_redesign-04
 type: requirement
 category: ui_redesign
-status: not_started
+status: scoped
 priority: HIGH
 complexity: complex
 split_from: buzz_hc_frontend_redesign
