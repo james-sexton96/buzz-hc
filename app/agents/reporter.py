@@ -1,10 +1,27 @@
-"""Reporter Agent: synthesize findings into a publication-ready Markdown report."""
+"""Reporter Agent: synthesize findings into a publication-ready Markdown report.
+
+Part 4: Adds a parallel streaming-only agent (`_reporter_stream_agent`) with
+`output_type=str` and a `stream_reporter_text` helper. The streaming agent
+emits free-form Markdown text via `stream_text(delta=True)` so the Run-screen
+"Emerging draft" panel can show word-by-word output. The structured
+`reporter_agent` (`output_type=MarketReport`) still runs after streaming —
+it is the authoritative producer of the typed `MarketReport`, gated by
+`output_validator`. Pydantic-ai's `stream_text()` is incompatible with
+structured outputs (hard-coded UserError), so the two-call hybrid is required.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent, ModelRetry, RunContext
 
 from app.context import ResearchContext
 from app.llm import get_model, get_retries
 from app.schema import AnalystFindings, MarketAccessFindings, MarketReport
+
+if TYPE_CHECKING:
+    from api.stream import StreamingResearchContext
 
 model = get_model()
 
@@ -89,11 +106,21 @@ reporter_agent = Agent(
         "2. Every section must draw only from the provided findings — no external facts.\n"
         "3. Cite sources; include all URLs from the findings in the sources list.\n"
         "4. Populate markdown_content with the FULL report as a single well-formatted "
-        "Markdown string (title, all sections, sources appendix).\n\n"
+        "Markdown string (title, all sections, sources appendix).\n"
+        "5. country_mix (OPTIONAL): if and ONLY if the findings contain country-level "
+        "share or spend data (e.g. EU5, US, regional breakdowns), populate country_mix "
+        "with one CountryMixEntry per country. Otherwise leave country_mix as null.\n"
+        "6. scenario_probabilities (OPTIONAL): if and ONLY if the findings contain "
+        "scenario-style assessments (base/bull/bear, optimistic/pessimistic, etc.), "
+        "populate scenario_probabilities with one ScenarioEntry per scenario. "
+        "Otherwise leave scenario_probabilities as null.\n\n"
         "ANTI-HALLUCINATION: If a field in the agent findings is null, empty, or 'data "
         "not available', write 'Data not available' in the relevant report section and "
         "log it in Gaps & Data Confidence. Never present estimated values as confirmed "
-        "data. Never fabricate payer policies, trial results, or market share figures."
+        "data. Never fabricate payer policies, trial results, or market share figures. "
+        "For country_mix and scenario_probabilities specifically: populate ONLY from "
+        "data present in the provided findings; if absent, leave as null. Do NOT invent "
+        "country shares, spend figures, or scenario probabilities."
     ),
 )
 
@@ -120,3 +147,69 @@ async def validate_reporter_output(
             "single Markdown string including all sections and a sources appendix."
         )
     return output
+
+
+# ---------------------------------------------------------------------------
+# Part 4: streaming-only text agent + helper
+#
+# `stream_text()` is incompatible with `output_type=MarketReport`
+# (UserError raised in pydantic-ai source). This separate agent emits
+# free-form Markdown text token-by-token via `stream_text(delta=True)`
+# purely for UX — the structured `reporter_agent` above remains the
+# authoritative producer of the typed `MarketReport`.
+# ---------------------------------------------------------------------------
+
+_reporter_stream_agent = Agent(
+    model,
+    deps_type=ResearchContext,
+    output_type=str,
+    retries=get_retries(),
+    instructions=(
+        "You are a Healthcare Commercial Intelligence Reporter writing a draft for "
+        "live streaming display. Synthesize the provided market access and analyst "
+        "findings into a well-structured Markdown report.\n\n"
+        "Begin with the title (as a # H1 heading), then the executive summary "
+        "(3 paragraphs: headline answer; key commercial findings; primary risk/caveat), "
+        "then the body sections appropriate to the question archetype, then a "
+        "'Gaps & Data Confidence' section, then 'Key Takeaways & Implications'.\n\n"
+        "Write only narrative prose and headings. Do NOT call any tools. Do NOT emit "
+        "JSON. Every claim must be supported by the provided findings — no external "
+        "facts. Where findings are null, empty, or 'data not available', write "
+        "'Data not available' rather than guessing.\n\n"
+        "Cite sources inline using [N] markers where N is the 1-based index into the "
+        "sources URL list. The full report is your output as plain Markdown text."
+    ),
+)
+
+
+async def stream_reporter_text(
+    synthesis_prompt: str,
+    ctx: "StreamingResearchContext",
+) -> str:
+    """Stream the reporter's narrative text into the SSE token queue.
+
+    For each delta chunk emitted by pydantic-ai's `stream_text(delta=True)`,
+    call `ctx.put_token(chunk)` to enqueue it for the SSE writer. Always
+    calls `ctx.close_token_stream()` in `finally` so the token-stream
+    sentinel is set even if the streaming agent raises mid-run.
+
+    Returns the accumulated text (concatenation of all chunks) — currently
+    unused by the route but kept for symmetry with the structured call.
+
+    Caller is responsible for the four-branch exception discrimination
+    (TimeoutError / UnexpectedModelBehavior / UsageLimitExceeded / Exception).
+    This helper only handles the queue lifecycle.
+    """
+    accumulated: list[str] = []
+    try:
+        async with _reporter_stream_agent.run_stream(
+            synthesis_prompt,
+            deps=ctx,
+        ) as stream_result:
+            async for chunk in stream_result.stream_text(delta=True, debounce_by=0.01):
+                if chunk:
+                    accumulated.append(chunk)
+                    ctx.put_token(chunk)
+    finally:
+        ctx.close_token_stream()
+    return "".join(accumulated)

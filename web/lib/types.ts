@@ -21,12 +21,57 @@ export interface ReportSection {
   content: string;
 }
 
+/**
+ * Optional per-country market mix entry — mirrors Python `CountryMixEntry`.
+ * Part 4 dossier panel: rendered only when `MarketReport.country_mix` is
+ * non-null and non-empty.
+ */
+export interface CountryMixEntry {
+  country: string;
+  share_2024?: number | null;
+  share_2030?: number | null;
+  spend_2024?: string | null;
+  spend_2030?: string | null;
+  notes?: string | null;
+}
+
+/**
+ * Optional scenario/risk entry — mirrors Python `ScenarioEntry`.
+ * Part 4 dossier panel: rendered only when `MarketReport.scenario_probabilities`
+ * is non-null and non-empty.
+ */
+export interface ScenarioEntry {
+  scenario: string;
+  probability_pct?: number | null;
+  description?: string | null;
+  impact?: string | null;
+}
+
 export interface MarketReport {
   title: string;
   executive_summary: string;
   sections: ReportSection[];
   sources: string[];
   markdown_content?: string | null;
+  /**
+   * Optional country-mix breakdown. Null/undefined for pre-Part-4 reports.
+   * Rendered as a dossier panel only when non-null and non-empty.
+   */
+  country_mix?: CountryMixEntry[] | null;
+  /**
+   * Optional scenario-probability list. Null/undefined for pre-Part-4 reports.
+   * Rendered as a dossier panel only when non-null and non-empty.
+   */
+  scenario_probabilities?: ScenarioEntry[] | null;
+}
+
+/**
+ * Payload shape of a `reporter_token` SSE event emitted during the reporter
+ * phase. Consumed by `useLiveSession` to accumulate `draftText`.
+ */
+export interface ReporterTokenEvent {
+  chunk: string;
+  token_index: number;
 }
 
 export interface UsageStats {

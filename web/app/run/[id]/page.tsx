@@ -9,6 +9,8 @@ import { PipelineStrip } from "@/components/buzz/PipelineStrip"
 import { SwarmTopology } from "@/components/buzz/SwarmTopology"
 import { AgentCard } from "@/components/buzz/AgentCard"
 import { EventLog } from "@/components/buzz/EventLog"
+import { StreamingDraft } from "@/components/buzz/StreamingDraft"
+import { SectionLabel } from "@/components/buzz/SectionLabel"
 import type { SessionStatus, WorkflowEvent } from "@/lib/types"
 
 const AGENT_DEFS = [
@@ -39,7 +41,7 @@ export default function RunDetailPage() {
   const params = useParams<{ id: string }>()
   const sessionId = params.id
   const router = useRouter()
-  const { session, liveEvents, isLoading, error } = useLiveSession(sessionId)
+  const { session, liveEvents, isLoading, error, draftText } = useLiveSession(sessionId)
 
   if (isLoading) {
     return (
@@ -128,10 +130,34 @@ export default function RunDetailPage() {
           ))}
         </div>
 
-        {/* Center: SwarmTopology + placeholder */}
-        <div style={{ borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "24px 16px" }}>
-          <SwarmTopology status={session.status} width={420} height={340} />
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-lo)", letterSpacing: "0.12em", opacity: 0.6 }}>← Reporter streaming added in Part 4</div>
+        {/* Center: SwarmTopology + live StreamingDraft (Part 4) */}
+        <div style={{ borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, padding: "16px 14px", minHeight: 0 }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SwarmTopology status={session.status} width={420} height={260} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2px" }}>
+            <SectionLabel
+              accent={
+                session.status === "running" ? "var(--cyan)" :
+                session.status === "paused"  ? "var(--amber)" :
+                session.status === "error"   ? "var(--red)" :
+                session.status === "complete" ? "var(--green)" :
+                "var(--text-lo)"
+              }
+            >
+              {session.status === "running"  ? "↻ streaming…" :
+               session.status === "paused"   ? "⏸ paused" :
+               session.status === "complete" ? "✓ finalized" :
+               session.status === "error"    ? "✕ truncated" :
+                                                "· idle"}
+            </SectionLabel>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--text-lo)", letterSpacing: "0.14em" }}>
+              {draftText.length > 0 ? `${draftText.length} CHARS` : ""}
+            </span>
+          </div>
+          <div style={{ flex: 1, minHeight: 180, display: "flex" }}>
+            <StreamingDraft draftText={draftText} status={session.status as SessionStatus} />
+          </div>
         </div>
 
         {/* Right: EventLog */}

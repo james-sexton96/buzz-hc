@@ -209,6 +209,59 @@ class ReportSection(BaseModel):
     content: str = Field(description="Markdown content for the section")
 
 
+class CountryMixEntry(BaseModel):
+    """Per-country market share entry for the country-mix dossier panel.
+
+    Optional Part 4 field on MarketReport — populated only when the analyst/
+    research findings contain country-level share or spend data. Otherwise left null
+    on MarketReport (anti-hallucination requirement).
+    """
+
+    country: str = Field(description="ISO country code or country name, e.g. 'DE', 'FR', 'US'")
+    share_2024: float | None = Field(
+        default=None,
+        description="Market share in 2024 as a percentage (0-100). Null if not present in findings.",
+    )
+    share_2030: float | None = Field(
+        default=None,
+        description="Projected market share in 2030 as a percentage (0-100). Null if not present in findings.",
+    )
+    spend_2024: str | None = Field(
+        default=None,
+        description="Spend in 2024 as a free-text dollar string (e.g. '$1.2B'). Null if not present in findings.",
+    )
+    spend_2030: str | None = Field(
+        default=None,
+        description="Projected spend in 2030 as a free-text dollar string. Null if not present in findings.",
+    )
+    notes: str | None = Field(
+        default=None,
+        description="Analyst commentary for this country row. Null if no commentary.",
+    )
+
+
+class ScenarioEntry(BaseModel):
+    """Per-scenario probability entry for the scenario/risk dossier panel.
+
+    Optional Part 4 field on MarketReport — populated only when findings contain
+    scenario-style assessments (base case, bull, bear, etc.).
+    """
+
+    scenario: str = Field(description="Scenario label, e.g. 'Base case', 'Bull', 'Bear'")
+    probability_pct: float | None = Field(
+        default=None,
+        description="Probability of this scenario as a percentage (0-100). Null if not quantified.",
+    )
+    description: str | None = Field(
+        default=None,
+        description="One-sentence description of the scenario premise and outcome.",
+    )
+    impact: str | None = Field(
+        default=None,
+        description="Commercial impact (e.g. 'positive', 'negative', 'neutral', '+15% revenue').",
+    )
+
+
 class MarketReport(BaseModel):
     """Top-level publication-ready market report."""
 
@@ -222,4 +275,19 @@ class MarketReport(BaseModel):
     markdown_content: str | None = Field(
         default=None,
         description="Full report as a single Markdown string (optional)",
+    )
+    country_mix: list[CountryMixEntry] | None = Field(
+        default=None,
+        description=(
+            "Optional country-level market mix breakdown. Populate ONLY from data present in the "
+            "provided findings; leave as null if absent. Pre-Part-4 reports omit this field — "
+            "Pydantic V2 defaults it to None on deserialization (backward-compatible)."
+        ),
+    )
+    scenario_probabilities: list[ScenarioEntry] | None = Field(
+        default=None,
+        description=(
+            "Optional list of scenarios with probability assessments. Populate ONLY from data "
+            "present in the provided findings; leave as null if absent. Backward-compatible."
+        ),
     )
